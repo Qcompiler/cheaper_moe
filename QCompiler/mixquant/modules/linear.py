@@ -316,7 +316,7 @@ class MixLinear_GEMM(nn.Module):
 
             
         
-        # if y1[0,0] > 100:
+        # # if y1[0,0] > 100:
         # print(self.weight.shape)
         # print(self.weight)
         # print(self.bit)

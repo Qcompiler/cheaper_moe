@@ -62,7 +62,7 @@ messages = [
     {"role": "user", "content": "Write a piece of quicksort code in C++"}
 ]
 input_tensor = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
-outputs = model.generate(input_tensor.to(model.device), max_new_tokens=256)
+outputs = model.generate(input_tensor.to(model.device), max_new_tokens=512)
 
 result = tokenizer.decode(outputs[0][input_tensor.shape[1]:], skip_special_tokens=True)
 print(result)
