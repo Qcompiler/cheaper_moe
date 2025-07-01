@@ -92,6 +92,7 @@ class MixLinear_GEMM(nn.Module):
         self.w = None
 
         self.fp8 = True
+        self.fp8 = False
 
 
 
@@ -151,7 +152,20 @@ class MixLinear_GEMM(nn.Module):
 
             quant_linear.q_weight.copy_ (B.cpu())
             quant_linear.q_scale_col.copy_(s.half().cpu()) 
-             
+
+        if bit == 3 or bit == 2:
+            from .mixed4bit import gen_quant4_my, gen_quant4
+
+            
+            w = torch.clone(tmp.cuda())
+            # w[:, linear.ind] = 0
+            n, k = w.shape
+            B, s = gen_quant4_my(n, k, w,  groupsize = 128, tile = 1, bit = bit)
+            # _, B, s = gen_quant4(k, n, w.t().contiguous(),   groupsize=128) 
+
+            quant_linear.q_weight.copy_ (B.cpu())
+            quant_linear.q_scale_col.copy_(s.half().cpu()) 
+
         if bit == 8:
             tmp /= scale.T
             tmp = tmp.round().to(torch.int8)
@@ -185,7 +199,7 @@ class MixLinear_GEMM(nn.Module):
 
         # print(inputs.shape)
         shape = x.shape[:-1] + (self.out_features, )
-        if self.bit == 4:
+        if self.bit <= 4:
      
             
     
@@ -205,7 +219,9 @@ class MixLinear_GEMM(nn.Module):
                     pass
                 else:    
                     
-                    self.q_weight_fp8 = torch.zeros(self.out_features, self.in_features, device = inputs.device, 
+                    self.q_weight_fp8 = torch.zeros(self.out_features, 
+                                                    self.in_features, 
+                                                    device = inputs.device, 
                                                     dtype=torch.float8_e4m3fn)
                     self.scale_weight_fp8 = torch.ones((1), device=inputs.device, dtype=torch.float32)
                     torch.ops._C.dynamic_scaled_fp8_quant(self.q_weight_fp8, self.weight, self.scale_weight_fp8)
@@ -276,6 +292,8 @@ class MixLinear_GEMM(nn.Module):
                 if self.bias is not None:
                     y1 += self.bias
             else:
+
+                assert self.arch >= 90
                 import mixgemm_v2
 
                 # print(inputs.shape)
@@ -297,6 +315,15 @@ class MixLinear_GEMM(nn.Module):
                                             self.bias, 2)
 
             
+        
+        # if y1[0,0] > 100:
+        # print(self.weight.shape)
+        # print(self.weight)
+        # print(self.bit)
+
+        # # print("y1 is nan")
+        # # print(y1)
+        # sys.exit(0)
         assert  y1.shape[0] > 0
         return y1.reshape(shape)
 

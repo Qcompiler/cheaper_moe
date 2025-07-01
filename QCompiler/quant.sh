@@ -2,7 +2,7 @@
 CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
 set -x
 
-export PYTHONPATH=/home/chenyidong/newstart/QComplier
+export PYTHONPATH=$(pwd)
 models=( $1 )
 path=/home/dataset
 for bit in   $2

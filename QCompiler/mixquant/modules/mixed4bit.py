@@ -213,12 +213,12 @@ class MyLayer(nn.Module):
 
 
 
-def gen_quant4_my(n, k, w, groupsize=-1,  tile = 1):
+def gen_quant4_my(n, k, w, groupsize=-1,  tile = 1, bit = 4):
 
     
     if groupsize == -1:
         groupsize = k   
-    maxq = 2 ** 4 - 1  # 4-bit量化，最大值15
+    maxq = 2 ** (bit) - 1  # 4-bit量化，最大值15
     n, k = w.shape  # 原始权重矩阵形状
 
     # 计算需要的组数（向上取整）
@@ -239,7 +239,9 @@ def gen_quant4_my(n, k, w, groupsize=-1,  tile = 1):
     # 量化过程
     linear = torch.clone(w_reshaped)
     linear = torch.round(linear / s).int()
-    linear += (maxq + 1) // 2  # 添加零点偏移
+
+    pianyi = 2 ** (4) - 1  # 4-bit量化，最大值15
+    linear += (pianyi + 1) // 2  # 添加零点偏移
     linear = torch.clamp(linear, 0, maxq)
     # 将量化的权重和缩放因子重塑回原始形状
     linear = linear.reshape(n, -1)[:, :k]  # 移除填充并恢复原始k维度

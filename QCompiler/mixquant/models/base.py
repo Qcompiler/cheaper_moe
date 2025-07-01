@@ -9,7 +9,7 @@ from safetensors.torch import save_file
 
 from huggingface_hub import snapshot_download
 from transformers import AutoModelForCausalLM, AutoConfig, PreTrainedModel
-from transformers.modeling_utils import shard_checkpoint
+from huggingface_hub import snapshot_download, save_torch_state_dict
 from mixquant.modules.linear import   MixLinear_GEMM
 from mixquant.utils.module import get_named_linears, set_op_by_name, weight_only_map,eightbit_only_name
 from transformers import AutoModel, AutoConfig, PreTrainedModel
@@ -57,48 +57,39 @@ class BaseForCausalLM(nn.Module):
         pass
 
     def save_quantized(self, save_dir, safetensors=False, shard_size="10GB"):
-        save_dir = save_dir[:-1] if save_dir[-1] == '/' else save_dir
+        save_dir = save_dir[:-1] if save_dir[-1] == "/" else save_dir
 
         # Save model
         class EmptyModule(nn.Module):
-            def __init__(self): super(EmptyModule, self).__init__()
-            def forward(self, x): return x
+            def __init__(self):
+                super(EmptyModule, self).__init__()
 
-        # Save model files with empty state dict
+            def forward(self, x):
+                return x
+        quant_config = {"quant_method": "eetq", "zero_point": False, "bits": 8}
+        # Save model and config files with empty state dict
+        self.model.config.quantization_config = self.quant_config
+        self.model.generation_config.do_sample = True
         self.model.save_pretrained(save_dir, state_dict=EmptyModule().state_dict())
 
         # Remove empty state dict
-        if os.path.exists(f'{save_dir}/pytorch_model.bin'):
-            os.remove(f'{save_dir}/pytorch_model.bin')
-        else:
-            print("do not have the file ", f'{save_dir}/pytorch_model.bin')
+        default_paths = [
+            f"{save_dir}/model.safetensors",
+            f"{save_dir}/pytorch_model.bin",
+        ]
+        for path in default_paths:
+            if os.path.exists(path):
+                os.remove(path)
+
         # model_name has no extension, add it when saving state_dict
-        model_name = 'model.safetensors' if safetensors else 'pytorch_model.bin'
-
-        # shard checkpoint into chunks (10GB default)
-        shards, index = shard_checkpoint(
-            self.model.state_dict(), 
-            max_shard_size=shard_size, 
-            weights_name=model_name
-        )
-
-        for shard_file, shard in shards.items():
-            if safetensors:
-                # safetensors must be in the same memory, so we duplicate and use contiguous memory
-                shard = {k: v.clone().contiguous() for k, v in shard.items()}
-                save_file(shard, os.path.join(save_dir, shard_file), metadata={"format": "pt"})
-            else:
-                torch.save(shard, os.path.join(save_dir, shard_file))
-
-        # save shard index
-        if index is not None:
-            with open(f'{save_dir}/{model_name}.index.json', 'w+') as file:
-                file.write(json.dumps(index, indent=4))
-
-        # Save config
-        with open(f'{save_dir}/quant_config.json', 'w+') as file:
-            file.write(json.dumps(self.quant_config, indent=4))
-        
+        model_name = "model.safetensors" if safetensors else "pytorch_model.bin"
+        save_torch_state_dict(
+            state_dict=self.model.state_dict(),
+            save_directory=save_dir,
+            max_shard_size=shard_size,
+            safe_serialization=safetensors,
+            force_contiguous=True,
+        )  
         
     @classmethod
     def from_pretrained(self, model_path, model_type, torch_dtype: torch.dtype = torch.float16, 

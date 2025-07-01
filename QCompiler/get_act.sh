@@ -1,6 +1,6 @@
-export PYTHONPATH=/home/chenyidong/newstart/QComplier/src
-CMD=" srun -N 1  --pty --gres=gpu:H100:1 python "
-# CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
+export PYTHONPATH=$(pwd)
+# CMD=" srun -N 1  --pty --gres=gpu:H100:1 python "
+CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
 set -x
 
 base=/home/dataset
