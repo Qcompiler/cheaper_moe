@@ -1,5 +1,5 @@
-# CMD=" srun -N 1  --pty --gres=gpu:H100:1 python "
-CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
+CMD=" srun -N 1  --pty --gres=gpu:H100:1 python "
+# CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
 set -x
 
 export PYTHONPATH=$(pwd)

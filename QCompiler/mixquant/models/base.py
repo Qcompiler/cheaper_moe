@@ -90,6 +90,9 @@ class BaseForCausalLM(nn.Module):
             safe_serialization=safetensors,
             force_contiguous=True,
         )  
+        with open(f'{save_dir}/quant_config.json', 'w+') as file:
+            file.write(json.dumps(self.quant_config, indent=4)) 
+
         
     @classmethod
     def from_pretrained(self, model_path, model_type, torch_dtype: torch.dtype = torch.float16, 

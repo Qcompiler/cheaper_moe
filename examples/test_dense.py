@@ -31,7 +31,7 @@ if quant == 'mixq3':
 if quant == 'mixq2':
     model_name = "/home/dataset/quant2/Qwen2.5-7B-Instruct"
 
-
+print(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
 if "gptq" in model_name.lower():

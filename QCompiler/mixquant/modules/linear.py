@@ -11,7 +11,7 @@ import mixgemm
 
 from torch import Tensor
 
-from vllm import _custom_ops as ops
+# from vllm import _custom_ops as ops
 # import vllm._C
 
 def two_compl(x: Tensor, bits: int) -> Tensor:

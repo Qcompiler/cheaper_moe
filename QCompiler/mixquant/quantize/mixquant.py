@@ -71,11 +71,11 @@ class MixQuantizer:
 
             # Quantize weights
             arch = torch.cuda.get_device_capability()
-            if arch[0] * 10 + arch[1] <= 89:
+            # if arch[0] * 10 + arch[1] <= 89:
 
-                self._apply_quant(self.modules[i], named_linears, weight_only, layer = i)
-            else:
-                self._apply_quant_sm90(self.modules[i], named_linears, weight_only, layer = i)
+            self._apply_quant(self.modules[i], named_linears, weight_only, layer = i)
+            # else:
+            #     self._apply_quant_sm90(self.modules[i], named_linears, weight_only, layer = i)
             clear_memory()
  
 
