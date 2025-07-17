@@ -1,7 +1,7 @@
-CMD=" srun -N 1  --pty --gres=gpu:H100:1 python "
-# CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
+# CMD=" srun -N 1  --pty --gres=gpu:H100:1 python "
+CMD=" srun -N 1  --pty --gres=gpu:4090:1 python "
 set -x
-
+export FP_features_num=256
 export PYTHONPATH=$(pwd)
 models=( $1 )
 path=/home/dataset
