@@ -41,6 +41,8 @@ class MixLinear_GEMM(nn.Module):
         print(in_features)
         print(out_features)
 
+        fp_features_num = int(fp_features_num)
+
         self.fp_features_num = fp_features_num
 
 

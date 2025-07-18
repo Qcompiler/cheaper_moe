@@ -221,7 +221,7 @@ def gen_quant4_my(n, k, w, groupsize=-1,  tile = 1, bit = 4):
     maxq = 2 ** (bit) - 1  # 4-bit量化，最大值15
 
     if bit <= 3:
-        maxq = 2 ** (3) - 1  # 缩放的时候缩放多一些
+        maxq = 2 ** (3)    # 缩放的时候缩放多一些
     n, k = w.shape  # 原始权重矩阵形状
 
     # 计算需要的组数（向上取整）
@@ -243,7 +243,11 @@ def gen_quant4_my(n, k, w, groupsize=-1,  tile = 1, bit = 4):
     linear = torch.clone(w_reshaped)
     linear = torch.round(linear / s).int()
 
-    linear = torch.clamp(linear,  - 2 ** (bit - 1), 2 ** (bit - 1) - 1)
+    max_v = 2 ** (bit - 1) - 1
+
+    if bit == 2:
+        max_v = 2 ** (bit - 1)
+    linear = torch.clamp(linear,  - 2 ** (bit - 1), max_v)
     
     pianyi = 2 ** (4) - 1  # 4-bit量化，最大值15
     linear += (pianyi + 1) // 2  # 添加零点偏移
